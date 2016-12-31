@@ -1,0 +1,95 @@
+---
+
+- name: "[hibiscus] install OpenJDK 8"
+  apt:
+    name: openjdk-8-jre
+    state: latest
+  when: hibiscus_install_openjdk8 is defined and hibiscus_install_openjdk8 == True
+
+- name: "[hibiscus] install python-mysqldb for ansible"
+  apt:
+    name: python-mysqldb
+    state: latest
+
+- name: "[hibiscus] install SQL client"
+  apt:
+    name: "{{ hibiscus_mysql_client }}"
+    state: latest
+  when: hibiscus_mysql_use is defined and hibiscus_mysql_use == True and hibiscus_mysql_client is defined and hibiscus_mysql_client != '' 
+
+- name: "[hibiscus] create system group"
+  group:
+    name: "{{ hibiscus_run_as_group }}"
+    state: present
+    system: yes
+  when: hibiscus_create_user is defined and hibiscus_create_user == True
+
+- name: "[hibiscus] create system user"
+  user:
+    name: "{{ hibiscus_run_as_user }}"
+    home: "{{ hibiscus_install_dir }}"
+    comment: "Hibiscus Payment Server"
+    group: "{{ hibiscus_run_as_group }}"
+    shell: /bin/false
+    state: present
+    system: yes
+    createhome: no
+  when: hibiscus_create_user is defined and hibiscus_create_user == True
+
+- name: "[hibiscus] check for already installed Version"
+  stat: 
+    path: "{{ hibiscus_install_dir }}/jameicaserver.sh"
+  register: _hibiscus_bin
+
+- block:
+  - name: "[hibiscus] Download Version to /tmp"
+    get_url: 
+      url: "{{ hibiscus_install_zip }}"
+      force: no
+      dest: /tmp/hibiscus.zip
+
+  - name: "[hibiscus] Extract archive"
+    unarchive:
+      src: "/tmp/hibiscus.zip"
+      dest: "/tmp"
+      copy: no
+
+  - name: "[hibiscus] Move extracted directory to {{ hibiscus_install_dir }}"
+    command: /bin/mv /tmp/hibiscus-server {{ hibiscus_install_dir }} 
+    args:
+      creates: "{{ hibiscus_install_dir }}"
+
+  - name: "[hibiscus] Remove /tmp/hibiscus.zip"
+    file: 
+      path: /tmp/hibiscus.zip
+      state: absent
+
+  - name: "[hibiscus] inject sql database structure"
+    mysql_db:  
+      name: "{{ hibiscus_mysql_db }}"
+      login_host: "{{ hibiscus_db_host }}"
+      login_port: "{{ hibiscus_db_port }}"
+      login_user: "{{ hibiscus_mysql_user }}"
+      login_password: "{{ hibiscus_mysql_pass }}"
+      state: import
+      target: "{{ hibiscus_install_dir }}/plugins/hibiscus/sql/mysql-create.sql"
+    ignore_errors: yes
+  when: _hibiscus_bin.stat.exists == False
+
+- name: "[hibiscus] create hibiscus sql config file"
+  template:
+    src: de.willuhn.jameica.hbci.rmi.HBCIDBService.properties.j2
+    dest: /opt/hibiscus-server/cfg/de.willuhn.jameica.hbci.rmi.HBCIDBService.properties
+
+- name: "[hibiscus] create sql shell config /root/.my.cnf"
+  template:
+    src: my.cnf.j2
+    dest: /root/.my.cnf
+
+- name: "[hibiscus] change ownership of installation directory"
+  file: 
+    path: "{{ hibiscus_install_dir }}"
+    owner: "{{ hibiscus_run_as_user }}"
+    group: "{{ hibiscus_run_as_group }}"
+    recurse: yes
+

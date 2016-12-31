@@ -1,0 +1,7 @@
+#{{ ansible_managed | comment }}
+{% if hibiscus_mysql_use is defined and hibiscus_mysql_use == True %}
+database.driver=de.willuhn.jameica.hbci.server.DBSupportMySqlImpl
+database.driver.mysql.jdbcurl=jdbc\:mysql\://{{ hibiscus_db_host }}\:{{ hibiscus_db_port }}/hibiscus?useUnicode\=Yes&characterEncoding\=ISO8859_1
+database.driver.mysql.username={{ hibiscus_mysql_user }}
+database.driver.mysql.password={{ hibiscus_mysql_pass }}
+{% endif %}

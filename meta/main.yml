@@ -1,0 +1,16 @@
+galaxy_info:
+  author: Martin Verges
+  description: Hibiscus Payment Server 
+  company: Verges Enterprises 
+  license: BSD 
+  min_ansible_version: 2.0
+  platforms:
+  - name: Debian
+    versions:
+    - jessie
+
+  galaxy_tags:
+  - hibiscus
+  - payment
+
+dependencies: []

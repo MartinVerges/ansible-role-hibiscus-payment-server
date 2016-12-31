@@ -1,0 +1,24 @@
+---
+# defaults file for verges.hibiscus
+
+hibiscus_install_dir: "/opt/hibiscus-server"
+hibiscus_install_zip: "http://www.willuhn.de/products/hibiscus-server/releases/hibiscus-server-2.6.19.zip"
+
+# User to run the process
+hibiscus_run_as_user: "hibiscus"
+hibiscus_run_as_group: "hibiscus"
+hibiscus_create_user: True
+
+hibiscus_install_openjdk8: True
+hibiscus_install_mycnf: True
+
+hibiscus_db_host: 127.0.0.1
+hibiscus_db_port: 3306
+
+hibiscus_mysql_use: True
+hibiscus_mysql_client: mariadb-client
+hibiscus_mysql_user: "hibiscus"
+hibiscus_mysql_pass: "hibiscus"
+# This can't be changed due to missing config in hibiscus (2.6.19)
+hibiscus_mysql_db: "hibiscus"
+
